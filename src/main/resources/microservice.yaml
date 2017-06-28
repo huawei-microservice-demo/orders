@@ -1,0 +1,18 @@
+APPLICATION_ID: orders
+service_description:
+  name: orders
+  version: 0.0.1
+cse:
+  service:
+    registry:
+      address: http://localhost:30100
+  grpc:
+    address: 0.0.0.0:9090
+  rest:
+    address: 0.0.0.0:7073
+  highway:
+    address: 0.0.0.0:7070?sslEnabled=false
+  handler:
+    chain:
+      Provider:
+        default: bizkeeper-provider
