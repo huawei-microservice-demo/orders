@@ -1,2 +1,2 @@
 # orders
-java - servicecomb orders micro service
+servicecomb orders micro service
