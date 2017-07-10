@@ -17,12 +17,11 @@ import java.net.Proxy;
 public final class RestProxyTemplate {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Autowired
-    RestTemplate restTemplate;
+    @Autowired RestTemplate restTemplate;
 
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+      return new RestTemplate();
     }
 
     @Value("${proxy.host:}")

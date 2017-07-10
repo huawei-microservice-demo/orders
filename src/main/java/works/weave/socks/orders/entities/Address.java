@@ -1,5 +1,6 @@
 package works.weave.socks.orders.entities;
 
+
 import org.springframework.data.annotation.Id;
 
 public class Address {
@@ -8,13 +9,9 @@ public class Address {
     private String id;
 
     private String number;
-
     private String street;
-
     private String city;
-
     private String postcode;
-
     private String country;
 
     public Address() {
@@ -47,10 +44,8 @@ public class Address {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         Address address = (Address) o;
 

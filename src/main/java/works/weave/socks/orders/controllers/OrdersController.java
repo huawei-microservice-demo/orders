@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.TypeReferences;
 import org.springframework.http.HttpStatus;
@@ -22,10 +23,15 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import io.servicecomb.provider.rest.common.RestSchema;
+import io.servicecomb.serviceregistry.api.registry.Microservice;
+import io.servicecomb.serviceregistry.api.registry.MicroserviceInstance;
+import io.servicecomb.serviceregistry.client.RegistryClientFactory;
+import io.servicecomb.serviceregistry.client.ServiceRegistryClient;
 import works.weave.socks.orders.config.OrdersConfigurationProperties;
 import works.weave.socks.orders.entities.Address;
 import works.weave.socks.orders.entities.Card;
@@ -39,9 +45,11 @@ import works.weave.socks.orders.services.AsyncGetService;
 import works.weave.socks.orders.values.PaymentRequest;
 import works.weave.socks.orders.values.PaymentResponse;
 
+@RepositoryRestController
 @RestSchema(schemaId = "orders")
 @RequestMapping(path = "/orders")
 public class OrdersController {
+
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     @Autowired
@@ -55,6 +63,13 @@ public class OrdersController {
 
     @Value(value = "${http.timeout:5}")
     private long timeout;
+    
+    @RequestMapping(path = "customerId", method = RequestMethod.GET)
+    public List<CustomerOrder> findByCustomerId(@RequestParam("custId") String id) throws InterruptedException, IOException, ExecutionException, TimeoutException
+    {
+    	List<CustomerOrder> orderList= customerOrderRepository.findByCustomerId(id);
+    	return orderList;
+    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(consumes = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.POST)
@@ -65,7 +80,11 @@ public class OrdersController {
                         "Invalid order request. Order requires customer, address, card and items.");
             }
 
-            LOG.debug("Starting calls");
+            LOG.info("Starting calls");
+            LOG.info(item.address.getPath());
+            LOG.info(item.customer.getPath());
+            LOG.info(item.card.getPath());
+            LOG.info(item.items.getPath());
             Future<Resource<Address>> addressFuture =
                 asyncGetService.getResource(item.address, new TypeReferences.ResourceType<Address>() {
                 });
@@ -82,25 +101,65 @@ public class OrdersController {
                 asyncGetService.getDataList(item.items, new ParameterizedTypeReference<List<Item>>() {
                 });
 
-            LOG.debug("End of calls.");
+            LOG.info("End of calls.");
 
             float amount = calculateTotal(itemsFuture.get(timeout, TimeUnit.SECONDS));
-
+            
+            LOG.info("amount :"+ amount);
+            // payment
+            String shippingUri = null;
+            String paymentUri = null;
+            ServiceRegistryClient client = RegistryClientFactory.getRegistryClient();
+            List<Microservice> services = client.getAllMicroservices();
+            for (Microservice service : services) {
+                String name = service.getServiceName();
+                if (name.equalsIgnoreCase("shipping")) {
+                    String appId = service.getAppId();
+                    String cseServiceID = client.getMicroserviceId(appId, name, "0.0.1");
+                    List<MicroserviceInstance> instances = client.getMicroserviceInstance(cseServiceID, cseServiceID);
+                    if (null != instances && !instances.isEmpty()) {
+                        for (MicroserviceInstance instance : instances) {
+                            List<String> eps = instance.getEndpoints();
+                            for (String ep : eps) {
+                                if (ep.startsWith("rest")) {
+                                    shippingUri = ep.substring(7);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else if (name.equalsIgnoreCase("payment")) {
+                    String appId = service.getAppId();
+                    String cseServiceID = client.getMicroserviceId(appId, name, "0.0.1");
+                    List<MicroserviceInstance> instances = client.getMicroserviceInstance(cseServiceID, cseServiceID);
+                    if (null != instances && !instances.isEmpty()) {
+                        for (MicroserviceInstance instance : instances) {
+                            List<String> eps = instance.getEndpoints();
+                            for (String ep : eps) {
+                                if (ep.startsWith("rest")) {
+                                    paymentUri = ep.substring(7);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             // Call payment service to make sure they've paid
             PaymentRequest paymentRequest = new PaymentRequest(
                     addressFuture.get(timeout, TimeUnit.SECONDS).getContent(),
                     cardFuture.get(timeout, TimeUnit.SECONDS).getContent(),
                     customerFuture.get(timeout, TimeUnit.SECONDS).getContent(),
                     amount);
-            LOG.info("Sending payment request: " + paymentRequest);
+            
 
             Future<PaymentResponse> paymentFuture = asyncGetService.postResource(
-                    config.getPaymentUri(),
+                    config.getPaymentUri(paymentUri),
                     paymentRequest,
                     new ParameterizedTypeReference<PaymentResponse>() {
                     });
             PaymentResponse paymentResponse = paymentFuture.get(timeout, TimeUnit.SECONDS);
-            LOG.info("Received payment response: " + paymentResponse);
+
             if (paymentResponse == null) {
                 throw new PaymentDeclinedException("Unable to parse authorisation packet");
             }
@@ -108,15 +167,11 @@ public class OrdersController {
                 throw new PaymentDeclinedException(paymentResponse.getMessage());
             }
 
-            // Ship
-
             String customerId = parseId(customerFuture.get(timeout, TimeUnit.SECONDS).getId().getHref());
-
-            Future<Shipment> shipmentFuture = asyncGetService.postResource(config.getShippingUri(),
+            Future<Shipment> shipmentFuture = asyncGetService.postResource(config.getShippingUri(shippingUri),
                     new Shipment(customerId),
                     new ParameterizedTypeReference<Shipment>() {
                     });
-
             CustomerOrder order = new CustomerOrder(
                     null,
                     customerId,
@@ -127,13 +182,14 @@ public class OrdersController {
                     shipmentFuture.get(timeout, TimeUnit.SECONDS),
                     Calendar.getInstance().getTime(),
                     amount);
-
-            LOG.debug("Received data: " + order.toString());
+            
+            LOG.info("Received data: " + order.toString());
 
             CustomerOrder savedOrder = customerOrderRepository.save(order);
-            LOG.debug("Saved order: " + savedOrder);
+            LOG.info("Saved order: " + savedOrder);
 
             return savedOrder;
+
         } catch (TimeoutException e) {
             throw new IllegalStateException("Unable to create order due to timeout from one of the services.", e);
         } catch (InterruptedException | IOException | ExecutionException e) {
@@ -164,11 +220,6 @@ public class OrdersController {
 
     @ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE)
     public class PaymentDeclinedException extends IllegalStateException {
-        /**
-         * 
-         */
-        private static final long serialVersionUID = 1L;
-
         public PaymentDeclinedException(String s) {
             super(s);
         }
@@ -176,11 +227,6 @@ public class OrdersController {
 
     @ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE)
     public class InvalidOrderException extends IllegalStateException {
-        /**
-         * 
-         */
-        private static final long serialVersionUID = 1L;
-
         public InvalidOrderException(String s) {
             super(s);
         }

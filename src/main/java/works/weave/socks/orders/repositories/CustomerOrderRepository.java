@@ -13,3 +13,4 @@ public interface CustomerOrderRepository extends MongoRepository<CustomerOrder, 
     @RestResource(path = "customerId")
     List<CustomerOrder> findByCustomerId(@Param("custId") String id);
 }
+

@@ -1,21 +1,20 @@
 package works.weave.socks.orders.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.net.URI;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties
 public class OrdersConfigurationProperties {
     private String domain = "";
 
-    public URI getPaymentUri() {
-        return new ServiceUri(new Hostname("localhost:7075"), new Domain(domain), "/paymentAuth").toUri();
+    public URI getPaymentUri(String uri) {
+               return new ServiceUri(new Hostname(uri), new Domain(domain), "/paymentAuth").toUri();
     }
 
-    public URI getShippingUri() {
-        return new ServiceUri(new Hostname("localhost:7076"), new Domain(domain), "/shipping").toUri();
+    public URI getShippingUri(String uri) {
+        return new ServiceUri(new Hostname(uri), new Domain(domain), "/shipping").toUri();
     }
-
     public void setDomain(String domain) {
         this.domain = domain;
     }

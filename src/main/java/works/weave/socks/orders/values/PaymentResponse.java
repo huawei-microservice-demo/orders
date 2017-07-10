@@ -2,8 +2,7 @@ package works.weave.socks.orders.values;
 
 public class PaymentResponse {
     private boolean authorised = false;
-
-    private String message;
+    private String  message;
 
     // For jackson
     public PaymentResponse() {
