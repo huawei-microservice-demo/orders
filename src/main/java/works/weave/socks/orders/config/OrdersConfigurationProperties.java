@@ -9,12 +9,13 @@ public class OrdersConfigurationProperties {
     private String domain = "";
 
     public URI getPaymentUri(String uri) {
-               return new ServiceUri(new Hostname(uri), new Domain(domain), "/paymentAuth").toUri();
+        return new ServiceUri(new Hostname(uri), new Domain(domain), "/paymentAuth").toUri();
     }
 
     public URI getShippingUri(String uri) {
         return new ServiceUri(new Hostname(uri), new Domain(domain), "/shipping").toUri();
     }
+
     public void setDomain(String domain) {
         this.domain = domain;
     }
@@ -55,7 +56,9 @@ public class OrdersConfigurationProperties {
 
     private class ServiceUri {
         private final Hostname hostname;
+
         private final Domain domain;
+
         private final String endpoint;
 
         private ServiceUri(Hostname hostname, Domain domain, String endpoint) {

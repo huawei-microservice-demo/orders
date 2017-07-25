@@ -39,7 +39,7 @@
 			<dependency>
 				<groupId>io.servicecomb</groupId>
 				<artifactId>java-chassis-parent</artifactId>
-				<version>0.1.0-m2-SNAPSHOT</version>
+				<version>0.1.1-SNAPSHOT</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -59,6 +59,11 @@
 			<version>0.1</version>
 		</dependency>
 		<dependency>
+            <groupId>io.servicecomb</groupId>
+            <artifactId>cse-handler-performance-stats</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
+        </dependency>
+		<dependency>
 			<groupId>com.huawei.paas.cse</groupId>
 			<artifactId>foundation-config-cc</artifactId>
 			<version>0.1</version>
@@ -71,7 +76,7 @@
 		<dependency>
 			<groupId>io.servicecomb</groupId>
 			<artifactId>spring-boot-starter-provider</artifactId>
-			<version>0.1.0-m2-SNAPSHOT</version>
+			<version>0.1.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

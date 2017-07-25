@@ -19,8 +19,7 @@ class PrometheusAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(SpringBootMetricsCollector.class)
     SpringBootMetricsCollector springBootMetricsCollector(Collection<PublicMetrics> publicMetrics) {
-        SpringBootMetricsCollector springBootMetricsCollector = new SpringBootMetricsCollector
-                (publicMetrics);
+        SpringBootMetricsCollector springBootMetricsCollector = new SpringBootMetricsCollector(publicMetrics);
         springBootMetricsCollector.register();
         return springBootMetricsCollector;
     }

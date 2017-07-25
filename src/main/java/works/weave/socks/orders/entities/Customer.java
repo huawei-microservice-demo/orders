@@ -1,6 +1,5 @@
 package works.weave.socks.orders.entities;
 
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,7 +14,9 @@ public class Customer {
     private String id;
 
     private String firstName;
+
     private String lastName;
+
     private String username;
 
     @DBRef(lazy = true)
@@ -28,7 +29,7 @@ public class Customer {
     }
 
     public Customer(String id, String firstName, String lastName, String username, List<Address> addresses,
-                    List<Card> cards) {
+            List<Card> cards) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -55,12 +56,15 @@ public class Customer {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         Customer customer = (Customer) o;
 
-        if (!getId().equals(customer.getId())) return false;
+        if (!getId().equals(customer.getId()))
+            return false;
         return getUsername() != null ? getUsername().equals(customer.getUsername()) : customer.getUsername() == null;
 
     }

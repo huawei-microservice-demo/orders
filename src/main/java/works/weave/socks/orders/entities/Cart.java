@@ -12,8 +12,10 @@ import java.util.List;
 public class Cart {
     @NotNull
     private String customerId;
+
     @Id
     private String id;
+
     @DBRef
     private List<Item> items = new ArrayList<>();
 

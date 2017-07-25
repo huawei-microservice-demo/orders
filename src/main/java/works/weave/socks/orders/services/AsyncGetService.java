@@ -52,8 +52,8 @@ public class AsyncGetService {
     }
 
     @Async
-    public <T> Future<Resource<T>> getResource(URI url, TypeReferences.ResourceType<T> type) throws
-            InterruptedException, IOException {
+    public <T> Future<Resource<T>> getResource(URI url,
+            TypeReferences.ResourceType<T> type) throws InterruptedException, IOException {
         RequestEntity<Void> request = RequestEntity.get(url).accept(MediaType.APPLICATION_JSON).build();
         LOG.info("Requesting: " + request.toString());
         Resource<T> body = restProxyTemplate.getRestTemplate().exchange(request, type).getBody();
@@ -62,8 +62,8 @@ public class AsyncGetService {
     }
 
     @Async
-    public <T> Future<Resources<T>> getDataList(URI url, TypeReferences.ResourcesType<T> type) throws
-            InterruptedException, IOException {
+    public <T> Future<Resources<T>> getDataList(URI url,
+            TypeReferences.ResourcesType<T> type) throws InterruptedException, IOException {
         RequestEntity<Void> request = RequestEntity.get(url).accept(HAL_JSON).build();
         LOG.info("Requesting: " + request.toString());
         Resources<T> body = restProxyTemplate.getRestTemplate().exchange(request, type).getBody();
@@ -72,8 +72,8 @@ public class AsyncGetService {
     }
 
     @Async
-    public <T> Future<List<T>> getDataList(URI url, ParameterizedTypeReference<List<T>> type) throws
-            InterruptedException, IOException {
+    public <T> Future<List<T>> getDataList(URI url,
+            ParameterizedTypeReference<List<T>> type) throws InterruptedException, IOException {
         RequestEntity<Void> request = RequestEntity.get(url).accept(MediaType.APPLICATION_JSON).build();
         LOG.info("Requesting: " + request.toString());
         List<T> body = restProxyTemplate.getRestTemplate().exchange(request, type).getBody();
@@ -83,8 +83,10 @@ public class AsyncGetService {
 
     @Async
     public <T, B> Future<T> postResource(URI uri, B body, ParameterizedTypeReference<T> returnType) {
-        RequestEntity<B> request = RequestEntity.post(uri).contentType(MediaType.APPLICATION_JSON).accept(MediaType
-                .APPLICATION_JSON).body(body);
+        RequestEntity<B> request = RequestEntity.post(uri)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(body);
         LOG.info("Requesting: " + request.toString());
         T responseBody = restProxyTemplate.getRestTemplate().exchange(request, returnType).getBody();
         LOG.info("Received: " + responseBody);

@@ -28,9 +28,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import io.servicecomb.provider.rest.common.RestSchema;
+import io.servicecomb.serviceregistry.RegistryUtils;
 import io.servicecomb.serviceregistry.api.registry.Microservice;
 import io.servicecomb.serviceregistry.api.registry.MicroserviceInstance;
-import io.servicecomb.serviceregistry.client.RegistryClientFactory;
 import io.servicecomb.serviceregistry.client.ServiceRegistryClient;
 import works.weave.socks.orders.config.OrdersConfigurationProperties;
 import works.weave.socks.orders.entities.Address;
@@ -63,12 +63,12 @@ public class OrdersController {
 
     @Value(value = "${http.timeout:5}")
     private long timeout;
-    
+
     @RequestMapping(path = "customerId", method = RequestMethod.GET)
-    public List<CustomerOrder> findByCustomerId(@RequestParam("custId") String id) throws InterruptedException, IOException, ExecutionException, TimeoutException
-    {
-    	List<CustomerOrder> orderList= customerOrderRepository.findByCustomerId(id);
-    	return orderList;
+    public List<CustomerOrder> findByCustomerId(
+            @RequestParam("custId") String id) throws InterruptedException, IOException, ExecutionException, TimeoutException {
+        List<CustomerOrder> orderList = customerOrderRepository.findByCustomerId(id);
+        return orderList;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -104,12 +104,12 @@ public class OrdersController {
             LOG.info("End of calls.");
 
             float amount = calculateTotal(itemsFuture.get(timeout, TimeUnit.SECONDS));
-            
-            LOG.info("amount :"+ amount);
+
+            LOG.info("amount :" + amount);
             // payment
             String shippingUri = null;
             String paymentUri = null;
-            ServiceRegistryClient client = RegistryClientFactory.getRegistryClient();
+            ServiceRegistryClient client = RegistryUtils.getServiceRegistryClient();
             List<Microservice> services = client.getAllMicroservices();
             for (Microservice service : services) {
                 String name = service.getServiceName();
@@ -151,7 +151,6 @@ public class OrdersController {
                     cardFuture.get(timeout, TimeUnit.SECONDS).getContent(),
                     customerFuture.get(timeout, TimeUnit.SECONDS).getContent(),
                     amount);
-            
 
             Future<PaymentResponse> paymentFuture = asyncGetService.postResource(
                     config.getPaymentUri(paymentUri),
@@ -182,7 +181,7 @@ public class OrdersController {
                     shipmentFuture.get(timeout, TimeUnit.SECONDS),
                     Calendar.getInstance().getTime(),
                     amount);
-            
+
             LOG.info("Received data: " + order.toString());
 
             CustomerOrder savedOrder = customerOrderRepository.save(order);

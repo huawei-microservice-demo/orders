@@ -42,7 +42,7 @@ public class CustomerOrder {
     }
 
     public CustomerOrder(String id, String customerId, Customer customer, Address address, Card card,
-                         Collection<Item> items, Shipment shipment, Date date, float total) {
+            Collection<Item> items, Shipment shipment, Date date, float total) {
         this.id = id;
         this.customerId = customerId;
         this.customer = customer;
@@ -67,7 +67,7 @@ public class CustomerOrder {
                 '}';
     }
 
-// Crappy getter setters for Jackson
+    // Crappy getter setters for Jackson
 
     public String getId() {
         return id;

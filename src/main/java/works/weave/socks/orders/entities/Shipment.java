@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public class Shipment {
     private String id;
+
     private String name;
 
     public Shipment() {
@@ -29,8 +30,10 @@ public class Shipment {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         Shipment shipment = (Shipment) o;
 

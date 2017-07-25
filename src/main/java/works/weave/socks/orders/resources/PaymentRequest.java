@@ -6,8 +6,11 @@ import works.weave.socks.orders.entities.Customer;
 
 public class PaymentRequest {
     private Address address;
+
     private Card card;
+
     private Customer customer;
+
     private float amount;
 
     // For jackson
