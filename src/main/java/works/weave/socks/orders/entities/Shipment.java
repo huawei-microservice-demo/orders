@@ -1,4 +1,4 @@
-package works.weave.socks.orders.entities;
+package works.weave.socks.shipping.entities;
 
 import java.util.UUID;
 

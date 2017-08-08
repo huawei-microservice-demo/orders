@@ -3,6 +3,7 @@ package works.weave.socks.orders.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import works.weave.socks.shipping.entities.Shipment;
 
 import java.util.Calendar;
 import java.util.Collection;

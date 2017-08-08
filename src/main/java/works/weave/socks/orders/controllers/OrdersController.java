@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import io.servicecomb.provider.springmvc.reference.RestTemplateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
+import org.springframework.scheduling.annotation.AsyncResult;
 import io.servicecomb.provider.rest.common.RestSchema;
 import io.servicecomb.serviceregistry.RegistryUtils;
 import io.servicecomb.serviceregistry.api.registry.Microservice;
@@ -38,19 +38,20 @@ import works.weave.socks.orders.entities.Card;
 import works.weave.socks.orders.entities.Customer;
 import works.weave.socks.orders.entities.CustomerOrder;
 import works.weave.socks.orders.entities.Item;
-import works.weave.socks.orders.entities.Shipment;
+import works.weave.socks.shipping.entities.Shipment;
 import works.weave.socks.orders.repositories.CustomerOrderRepository;
 import works.weave.socks.orders.resources.NewOrderResource;
 import works.weave.socks.orders.services.AsyncGetService;
 import works.weave.socks.orders.values.PaymentRequest;
 import works.weave.socks.orders.values.PaymentResponse;
-
+import org.springframework.web.client.RestTemplate;
 @RepositoryRestController
 @RestSchema(schemaId = "orders")
 @RequestMapping(path = "/orders")
 public class OrdersController {
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private static RestTemplate restTemplate;
 
     @Autowired
     private OrdersConfigurationProperties config;
@@ -167,10 +168,16 @@ public class OrdersController {
             }
 
             String customerId = parseId(customerFuture.get(timeout, TimeUnit.SECONDS).getId().getHref());
-            Future<Shipment> shipmentFuture = asyncGetService.postResource(config.getShippingUri(shippingUri),
+            /*Future<Shipment> shipmentFuture = asyncGetService.postResource(config.getShippingUri(shippingUri),
                     new Shipment(customerId),
                     new ParameterizedTypeReference<Shipment>() {
-                    });
+                    }); */
+            //highway
+            restTemplate = RestTemplateBuilder.create();
+            String prefix = "cse://shipping";           
+            Shipment shippment = restTemplate.postForObject(prefix + "/shipping", new Shipment(customerId), Shipment.class);
+            Future<Shipment> shipmentFuture = new AsyncResult<>(shippment);
+
             CustomerOrder order = new CustomerOrder(
                     null,
                     customerId,
